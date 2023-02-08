@@ -1,85 +1,111 @@
 package by.ivankov.task5.entity;
 
-
-import by.ivankov.task5.exception.RouteException;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Deque;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Route {
+
     private static Logger logger = LogManager.getLogger();
+    private Random random = new Random();
     private static Route instance;
-    private static ReentrantLock lock = new ReentrantLock();
-    private List<Stop> stops;
-    private List<Bus> buses;
-    private Bus bus;
-    private static final int maxBussesInRoute = 20;
-    private static final int minBussesInRoute = 0;
-    private int bussesCounter = 0;
+    private static ReentrantLock lock = new ReentrantLock(true);
+    private static AtomicBoolean create = new AtomicBoolean(false);
+    private AtomicInteger passengers = new AtomicInteger(150);
+    private Deque<Stop> stops;
 
     private Route() {
-        stops = new ArrayList<>();
-        buses = new ArrayList<>();
+        stops = new ArrayDeque<>();
     }
 
     public static Route getInstance() {
-        lock.lock();
-        try {
-            if (instance == null) {
-                instance = new Route();
+        if (!create.get()) {
+            lock.lock();
+            try {
+                if (instance == null) {
+                    instance = new Route();
+                    create.getAndSet(true);
+                }
+            } finally {
+                lock.unlock();
             }
-        } finally {
-            lock.unlock();
         }
         return instance;
     }
 
-    public synchronized boolean addBus(Bus element) throws RouteException { // TODO: 06.02.2023    
-        if (bussesCounter < maxBussesInRoute) {
-            notifyAll();
-            buses.add(element);
-            logger.log(Level.INFO, "Bus added to the route: " + buses.size());
-            bussesCounter++;
-        } else {
-            logger.log(Level.INFO, "the route is busy: " + buses.size());
-        }
-        return true;
+    public Deque<Stop> getStops() {
+        return stops;
     }
 
-    public synchronized Bus removeBus(int id) throws RouteException {
-        if (bussesCounter > minBussesInRoute) {
-            notifyAll();
-            for (Bus bus : buses) {
-                if (id == bus.getId()) {
-                    bussesCounter--;
-                    logger.log(Level.INFO, "the route is busy" + id, buses.size());
-                    buses.remove(bus);
-                    return bus;
-                }
-            }
+    public Random getRandom() {
+        return random;
+    }
+
+    public Stop getStop() {
+        lock.lock();
+        Stop stop;
+        try {
+            stop = stops.poll();
+        } finally {
+            lock.unlock();
         }
-        logger.log(Level.ERROR, "there are no buses on the route");
-        return null;
+        return stop;
+    }
+
+    public void releaseStop(Stop stop) {
+        lock.lock();
+        try {
+            stops.add(stop);
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void addStop(Stop stop) {
-        stops.add(stop);
+        lock.lock();
+        try {
+            stops.add(stop);
+        } finally {
+            lock.unlock();
+        }
     }
 
-   public void removeStop(int id) {
-        stops.remove(id);
+    public void removeStop(int id) {
+        lock.lock();
+        try {
+            stops.remove(id);
+        } finally {
+            lock.unlock();
+        }
     }
 
-    public List<Bus> getBuses() {
-        return buses;
+    public int load(int passengers) {
+        lock.lock();
+        try {
+            this.passengers.addAndGet(-random.nextInt(passengers));
+        } finally {
+            {
+                lock.unlock();
+            }
+        }
+        return passengers;
     }
 
-    public List<Stop> getStops() {
-        return stops;
+    public int unload(int passengers) {
+        lock.lock();
+        try {
+            this.passengers.addAndGet(random.nextInt(passengers));
+        } finally {
+            {
+                lock.unlock();
+            }
+        }
+        return passengers;
     }
 }
