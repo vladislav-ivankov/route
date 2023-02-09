@@ -13,11 +13,10 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Route {
 
     private static Logger logger = LogManager.getLogger();
-    private Random random = new Random();
     private static Route instance;
     private static ReentrantLock lock = new ReentrantLock(true);
     private static AtomicBoolean create = new AtomicBoolean(false);
-    private AtomicInteger passengers = new AtomicInteger(150);
+    private AtomicInteger busPassengers = new AtomicInteger(150);
     private Deque<Stop> stops;
 
     private Route() {
@@ -43,8 +42,12 @@ public class Route {
         return stops;
     }
 
-    public Random getRandom() {
-        return random;
+    public void setBusPassengers(AtomicInteger busPassengers) {
+        this.busPassengers = busPassengers;
+    }
+
+    public void setStops(Deque<Stop> stops) {
+        this.stops = stops;
     }
 
     public Stop getStop() {
@@ -88,7 +91,7 @@ public class Route {
     public int load(int passengers) {
         lock.lock();
         try {
-            this.passengers.addAndGet(-random.nextInt(passengers));
+            busPassengers.addAndGet(-passengers);
         } finally {
             {
                 lock.unlock();
@@ -100,7 +103,7 @@ public class Route {
     public int unload(int passengers) {
         lock.lock();
         try {
-            this.passengers.addAndGet(random.nextInt(passengers));
+            busPassengers.addAndGet(passengers);
         } finally {
             {
                 lock.unlock();
