@@ -13,7 +13,6 @@ public class Bus extends Thread {
     private Random random = new Random();
     private long id;
     private int passengers;
-    private Route route;
 
     public enum StateBus {
         UNLOAD, UNLOAD_AND_LOAD
@@ -21,43 +20,50 @@ public class Bus extends Thread {
 
     private StateBus stateBus;
 
-    public Bus(StateBus stateBus) {
-        this.route = Route.getInstance();
+    public Bus() {
         this.id = BusIdGenerator.idGenerator();
-        this.stateBus = stateBus;
+        this.stateBus = randomState();
         this.passengers = random.nextInt(25);
     }
 
     public long getId() {
         return id;
     }
+
+    public StateBus randomState() {
+        int randomValue = random.nextInt(2);
+        return randomValue == 0 ? StateBus.UNLOAD : StateBus.UNLOAD_AND_LOAD;
+    }
+
     @Override
     public void run() {
         Route route = Route.getInstance();
-        Stop stop = null;
+        BusStop busStop = null;
         try {
-            stop = route.getStop();
-            stop.getSemaphore().acquire();
-            logger.log(Level.INFO, "The bus arrives at the stop " + stop.getId());
-            System.out.println("The bus " + id + " is arrives at the stop " + stop.getId());
+            busStop = route.getStop();
+            busStop.getSemaphore().acquire();
+            logger.info("The bus " + id + " is arrives at the stop " + busStop.getId());
+            System.out.println("The bus " + id + " is arrives at the stop " + busStop.getId() +"\n");
             TimeUnit.SECONDS.sleep(2);
             switch (stateBus) {
                 case UNLOAD -> {
-                    System.out.println("Passengers out " + route.unload(passengers) + " at the bus stop " + stop.getId());
+                    logger.info("Passengers out" + route.unload(passengers) + " at the bus stop "  + busStop.getId());
+                    System.out.println("Passengers out " + route.unload(passengers) + " at the bus stop " + busStop.getId());
                 }
                 case UNLOAD_AND_LOAD -> {
                     route.unload(passengers);
-                    System.out.println("Passengers have moved " + route.load(passengers) + " at the bus stop " + stop.getId());
+                    logger.info("Passengers have moved " +route.load(passengers) + " at the bus stop " + busStop.getId());
+                    System.out.println("Passengers have moved " + route.load(passengers) + " at the bus stop " + busStop.getId());
                 }
             }
             TimeUnit.SECONDS.sleep(5);
-            stop.getSemaphore().release();
-            logger.log(Level.INFO, "The bus departs from the stop " + stop.getId());
-            System.out.println("The bus " + id + " is departs from the stop " + stop.getId());
+            busStop.getSemaphore().release();
+            logger.info("The bus departs from the stop " + busStop.getId());
+            System.out.println("The bus " + id + " is departs from the stop " + busStop.getId() +"\n");
         } catch (InterruptedException e) {
-            logger.log(Level.ERROR, e);
+            logger.error("The thread is busy", e);
         } finally {
-            route.releaseStop(stop);
+            route.releaseStop(busStop);
         }
     }
 }

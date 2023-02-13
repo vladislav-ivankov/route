@@ -7,14 +7,15 @@ import org.apache.logging.log4j.Logger;
 import java.util.StringJoiner;
 import java.util.concurrent.Semaphore;
 
-public class Stop {
+public class BusStop {
     private static Logger logger = LogManager.getLogger();
     private long id;
+    private static final int MAX_BUS_AT_STOP = 2;
     private Semaphore semaphore;
 
-    public Stop() {
+    public BusStop() {
         this.id = StopIdGenerator.idGenerator();
-        this.semaphore = new Semaphore(2);
+        this.semaphore = new Semaphore(MAX_BUS_AT_STOP);
     }
 
     public long getId() {
@@ -31,7 +32,7 @@ public class Stop {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Stop.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", BusStop.class.getSimpleName() + "[", "]")
                 .add("id=" + id)
                 .toString();
     }

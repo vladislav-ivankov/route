@@ -1,6 +1,6 @@
 package by.ivankov.task5.reader.impl;
 
-import by.ivankov.task5.entity.Stop;
+import by.ivankov.task5.entity.BusStop;
 import by.ivankov.task5.exception.RouteException;
 import by.ivankov.task5.reader.FileReaderService;
 import org.apache.logging.log4j.LogManager;
@@ -14,8 +14,8 @@ public class FileReaderServiceImpl implements FileReaderService {
     private static final String SEPARATOR = "\\s+";
 
     @Override
-    public ArrayDeque<Stop> reader(String fileName) throws RouteException {// TODO: 05.02.2023
-        ArrayDeque<Stop> stops = new ArrayDeque<>();
+    public ArrayDeque<BusStop> reader(String fileName) throws RouteException {// TODO: 05.02.2023
+        ArrayDeque<BusStop> busStops = new ArrayDeque<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line = reader.readLine();
@@ -30,6 +30,6 @@ public class FileReaderServiceImpl implements FileReaderService {
         } catch (IOException e) {
             throw new RouteException(e);
         }
-        return stops;
+        return busStops;
     }
 }

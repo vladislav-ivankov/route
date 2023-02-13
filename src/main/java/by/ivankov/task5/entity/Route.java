@@ -5,9 +5,11 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Random;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Route {
@@ -17,10 +19,11 @@ public class Route {
     private static ReentrantLock lock = new ReentrantLock(true);
     private static AtomicBoolean create = new AtomicBoolean(false);
     private AtomicInteger busPassengers = new AtomicInteger(150);
-    private Deque<Stop> stops;
+    private Condition condition = lock.newCondition();
+    private BlockingDeque<BusStop> busStops;
 
     private Route() {
-        stops = new ArrayDeque<>();
+        busStops = new LinkedBlockingDeque<>();
     }
 
     public static Route getInstance() {
@@ -38,54 +41,22 @@ public class Route {
         return instance;
     }
 
-    public Deque<Stop> getStops() {
-        return stops;
+    public void setStops(BlockingDeque<BusStop> busStops) {
+        this.busStops = busStops;
     }
 
-    public void setBusPassengers(AtomicInteger busPassengers) {
-        this.busPassengers = busPassengers;
-    }
-
-    public void setStops(Deque<Stop> stops) {
-        this.stops = stops;
-    }
-
-    public Stop getStop() {
-        lock.lock();
-        Stop stop;
-        try {
-            stop = stops.poll();
-        } finally {
-            lock.unlock();
-        }
+    public BusStop getStop() {
+        BusStop stop = null;
+            try {
+                stop = busStops.take();
+            } catch (InterruptedException e) {
+                logger.error("The thread is busy", e);
+            }
         return stop;
     }
 
-    public void releaseStop(Stop stop) {
-        lock.lock();
-        try {
-            stops.add(stop);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public void addStop(Stop stop) {
-        lock.lock();
-        try {
-            stops.add(stop);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public void removeStop(int id) {
-        lock.lock();
-        try {
-            stops.remove(id);
-        } finally {
-            lock.unlock();
-        }
+    public void releaseStop(BusStop busStop) {
+        busStops.offer(busStop);
     }
 
     public int load(int passengers) {
