@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 public class Bus extends Thread {
     static Logger logger = LogManager.getLogger();
     private Random random = new Random();
+    private static final int MAX_PASSENGERS_IN_BUS = 50;
     private long id;
     private int passengers;
 
@@ -22,7 +23,7 @@ public class Bus extends Thread {
     public Bus() {
         this.id = BusIdGenerator.idGenerator();
         this.stateBus = randomState();
-        this.passengers = random.nextInt(25);
+        this.passengers = random.nextInt(MAX_PASSENGERS_IN_BUS);
     }
 
     public long getId() {
