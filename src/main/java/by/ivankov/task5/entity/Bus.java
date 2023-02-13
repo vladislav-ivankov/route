@@ -1,7 +1,6 @@
 package by.ivankov.task5.entity;
 
 import by.ivankov.task5.util.BusIdGenerator;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

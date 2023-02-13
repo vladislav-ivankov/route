@@ -18,7 +18,7 @@ public class Route {
     private static Route instance;
     private static ReentrantLock lock = new ReentrantLock(true);
     private static AtomicBoolean create = new AtomicBoolean(false);
-    private AtomicInteger busPassengers = new AtomicInteger(150);
+    private AtomicInteger busPassengers = new AtomicInteger();
     private Condition condition = lock.newCondition();
     private BlockingDeque<BusStop> busStops;
 
